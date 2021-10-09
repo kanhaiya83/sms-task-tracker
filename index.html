@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <input type="text" class="task" id="task" value="Write a paper" />
+    <input type="text" name="" id="time" value="30" />
+    <button>Click me</button>
+  </body>
+  <script>
+    titleEle = document.querySelector("#task");
+    timeEle = document.querySelector("#time");
+    document.querySelector("button").addEventListener("click", async () => {
+      var time = new Date().getTime() + parseInt(timeEle.value * 1000);
+var title=titleEle.value
+      const task={
+      title: title,
+      isCompleted: false,
+      time:4359829528958,
+      reminder:{
+          isSet:true,
+          reminderTime:time,
+          reminderMethod:"whatsapp",
+          mobileNumber:"+918209033423"
+      }
+    }
+    
+
+      const fetchedData = await fetch("/tasks", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body:JSON.stringify(task)
+      });
+      const data=await fetchedData.json()
+      console.log(data)
+    });
+  </script>
+</html>
