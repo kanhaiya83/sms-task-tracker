@@ -1,6 +1,7 @@
 const express = require("express");
+const _ = require("lodash");
 //jwt middleware jwt token to req.user.id
-const fetchuser=require("../middleware/fetchuser")
+const fetchuser = require("../middleware/fetchuser");
 //node-cron
 var cron = require("node-cron");
 //twilio
@@ -8,7 +9,7 @@ const twilioAccountSid = "AC9c0c8cffabf8df0e5b80b523515b9197";
 const twilioAuthToken = "058bcbfb3951c130f4bcaf73dac768d7";
 const twilio = require("twilio")(twilioAccountSid, twilioAuthToken);
 //mongoose
-const {taskModel} = require("../database/mongoose.js");
+const { taskModel, userModel } = require("../database/mongoose.js");
 const app = express();
 
 app.use(express.json());
@@ -28,7 +29,6 @@ const sendSms = (number, message) => {
     });
 };
 const formatTimeCode = (timeCode) => {
-  
   const date = new Date(timeCode);
   const space = " ";
   //format it in "* * * * * *" for node-cron
@@ -46,8 +46,8 @@ const formatTimeCode = (timeCode) => {
   return timeParam;
 };
 const setTimer = (timeCode, number, message) => {
-
   const time = formatTimeCode(timeCode);
+  console.log("Scheduling Timer");
   cron.schedule(
     time,
     () => {
@@ -60,55 +60,68 @@ const setTimer = (timeCode, number, message) => {
   );
 };
 
-router.get("/tasks",fetchuser, async(req, res) => {
-  try{
-    const tasks=await taskModel.find({userId:req.user.id})
-    res.send({tasks:tasks})
-
-  }
-  catch(e){
-    res.status(500).send(e)
-
+router.get("/tasks", fetchuser, async (req, res) => {
+  try {
+    const tasks = await taskModel.find({ userId: req.user.id });
+    return res.send({ tasks: tasks });
+  } catch (e) {
+    res.status(500).send(e);
   }
 });
 
-router.post("/tasks",fetchuser,async (req, res) => {
-  if (req.body.reminder.isSet) {
-    try{
-      const reminderTime = req.body.reminder.reminderTime;
-    const mobileNumber = req.body.reminder.mobileNumber;
-    const taskTitle = req.body.title;
-    console.log({reminderTime, mobileNumber, taskTitle})
-    setTimer(reminderTime, mobileNumber, taskTitle);}
-    catch(e){
-      return res.status(500).send({error:e,message:"Some problem occured while saving the task"})
-    }
-  }
-//adding the user parameter
-  requestedTask=req.body
-  requestedTask.userId=req.user.id
+router.post("/tasks", fetchuser, async (req, res) => {
+  const reqBody = req.body;
+  console.log({ reqBody });
+
+  //adding the user parameter
+  requestedTask = req.body;
+  requestedTask.userId = req.user.id;
   const task = new taskModel(requestedTask);
   try {
     const savedTask = await task.save();
-    return res.send({savedTask});
+
+    //sendSMS
+    if (req.body.reminder.isSet) {
+      const user = await userModel.findById(req.user.id);
+      const reminderTime = req.body.reminder.reminderTime;
+      const mobileNumber = user.mobile;
+      const taskTitle = req.body.title;
+      setTimer(reminderTime, mobileNumber, taskTitle);
+    }
+    return res.send({ savedTask });
   } catch (e) {
-    res.status(500).send(e)
-  }
-
-});
-router.delete("/tasks/:id", async(req, res) => {
-  try{
-  const deleted=await taskModel.findByIdAndDelete(req.params.id)
-  if(!deleted){
-    return res.status(404).send("Requested task not found")
-  }
-  res.send(deleted)}
-  catch(e){
-    console.log(e)
-    res.status(500).send()
+    return res.status(500).send(e);
   }
 });
+router.delete("/tasks/:id", async (req, res) => {
+  try {
+    const deleted = await taskModel.findByIdAndDelete(req.params.id);
+    if (!deleted) {
+      return res.status(404).send("Requested task not found");
+    }
+    res.send(deleted);
+  } catch (e) {
+    console.log(e);
+    res.status(500).send();
+  }
+});
 
-
+router.patch("/tasks/:id", fetchuser, async (req, res) => {
+  console.log({ tobepatched: req.body });
+  try {
+    const toBePatched = await taskModel.findByIdAndUpdate(
+      req.params.id,
+      { $set: req.body },
+      { new: true }
+    );
+    if (!toBePatched) {
+      return res.status(404).send("Requested task not found");
+    }
+    res.send(toBePatched);
+  } catch (e) {
+    console.log(e);
+    res.status(500).send();
+  }
+});
 
 module.exports = router;

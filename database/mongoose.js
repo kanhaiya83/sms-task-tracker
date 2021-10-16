@@ -1,9 +1,11 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
 const { Schema } = mongoose;
+const testURI="mongodb+srv://schedulerserver404:schedulerserver404@cluster0.qubwn.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
 
 const mongo_URI =
-  process.env.MONGODB_URI || "mongodb://localhost:27017/todo-sms-app";
+
+testURI||  process.env.MONGODB_URI || "mongodb://localhost:27017/todo-sms-app";
 mongoose
   .connect(mongo_URI, {
     useNewUrlParser: true,
@@ -17,23 +19,21 @@ mongoose
 
 reminderSchema = new Schema({
   isSet: Boolean,
-  reminderTime: Number,
-  reminderMethod: String,
-  mobileNumber: String,
-  email: String,
+  reminderTime: Number
 });
 
 taskSchema = new Schema({
   userId:String,
-  title: String,
-  isCompleted: Boolean,
-  time: Number,
+  title: {type:String,required:true},
+  isCompleted: {type:Boolean,required:true},
+  time: {type:Number,required:true},
   reminder: reminderSchema,
 });
 
 userSchema = new Schema({
   username: { type: String, required: true },
   password: { type: String, required: true },
+  mobile:{type:String}
 });
 
 taskModel = mongoose.model("task", taskSchema);
