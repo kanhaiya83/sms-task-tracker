@@ -47,7 +47,7 @@ const formatTimeCode = (timeCode) => {
 };
 const setTimer = (timeCode, number, message) => {
   const time = formatTimeCode(timeCode);
-  console.log("Scheduling Timer");
+  console.log({date:new Date(timeCode),number:number, timeCode });
   cron.schedule(
     time,
     () => {
@@ -63,9 +63,9 @@ const setTimer = (timeCode, number, message) => {
 router.get("/tasks", fetchuser, async (req, res) => {
   try {
     const tasks = await taskModel.find({ userId: req.user.id });
-    return res.send({ tasks: tasks });
+    return res.send({ tasks: tasks ,success:true});
   } catch (e) {
-    res.status(500).send(e);
+    res.status(500).send({error:e,message:"Some error occurred!!",success:false});
   }
 });
 
@@ -88,9 +88,9 @@ router.post("/tasks", fetchuser, async (req, res) => {
       const taskTitle = req.body.title;
       setTimer(reminderTime, mobileNumber, taskTitle);
     }
-    return res.send({ savedTask });
+    return res.send({ savedTask,success:true });
   } catch (e) {
-    return res.status(500).send(e);
+    return res.status(500).send({error:e,message:"Some error occurred!!",success:false});
   }
 });
 router.delete("/tasks/:id", async (req, res) => {
@@ -99,10 +99,10 @@ router.delete("/tasks/:id", async (req, res) => {
     if (!deleted) {
       return res.status(404).send("Requested task not found");
     }
-    res.send(deleted);
+    res.send({deleted,success:true});
   } catch (e) {
     console.log(e);
-    res.status(500).send();
+    res.status(500).send({error:e,message:"Some error occurred!!",success:false});
   }
 });
 
@@ -115,12 +115,12 @@ router.patch("/tasks/:id", fetchuser, async (req, res) => {
       { new: true }
     );
     if (!toBePatched) {
-      return res.status(404).send("Requested task not found");
+      return res.status(404).send({error:"Requested task not found",message:"Requested task not found",success:false});
     }
-    res.send(toBePatched);
+    res.send({success:true,toBePatched});
   } catch (e) {
     console.log(e);
-    res.status(500).send();
+    res.status(500).send({error:e,message:"Some error occurred!!",success:false});
   }
 });
 
