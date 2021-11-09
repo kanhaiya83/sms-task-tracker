@@ -21,6 +21,11 @@ app.use(userRouter)
 app.get("/",(req,res)=>{
   res.sendFile(__dirname+"./build/index.html")
 })
+
+app.get("/test",(req,res)=>{
+  res.send("Test1")
+})
+
 app.listen(port,(req,res)=>{
     console.log("App running on "+ port)
 })
