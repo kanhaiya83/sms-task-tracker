@@ -6,7 +6,7 @@ const fetchuser = require("../middleware/fetchuser");
 var cron = require("node-cron");
 //twilio
 const twilioAccountSid = "AC9c0c8cffabf8df0e5b80b523515b9197";
-const twilioAuthToken = "058bcbfb3951c130f4bcaf73dac768d7";
+const twilioAuthToken = "e284d3d40be45d14ea7a92e124cc0ecb";
 const twilio = require("twilio")(twilioAccountSid, twilioAuthToken);
 //mongoose
 const { taskModel, userModel } = require("../database/mongoose.js");
